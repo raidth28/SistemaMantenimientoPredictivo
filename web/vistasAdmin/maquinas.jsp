@@ -24,6 +24,7 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/barraNavegacion.css">
+    <link rel="stylesheet" href="css/custom-cards.css">
 </head>
 
 <body>
@@ -105,41 +106,82 @@
           </div>
         </div>
 
-            <div class="row row-cols-1 row-cols-md-3 g-4">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
                 <%
                     if (maquinas != null && !maquinas.isEmpty()) {
                         for (Maquina m : maquinas) {
                             
-                            String img = (m.getImagen() != null && !m.getImagen().trim().isEmpty())
-                                         ? m.getImagen()
-                                         : request.getContextPath() + "/img/placeholder.png";
+                            // Determinar imagen (usando un ícono de vehículo por defecto si no hay URL)
+                            String vehicleIconClass = (m.getImagen() != null && !m.getImagen().trim().isEmpty())
+                                                            ? "" // No es un ícono, es una imagen
+                                                            : "bi bi-truck vehicle-icon-placeholder"; // Bootstrap Icon (se necesita importar)
+                            
+                            String img = (vehicleIconClass.isEmpty())
+                                            ? m.getImagen()
+                                            : request.getContextPath() + "/img/placeholder.png"; // Usar el placeholder si no es un ícono
+
+                            // Lógica de color de estado
+                            String estadoColorClass = "status-badge-secondary"; // Clase por defecto
+                            String estadoText = "Mantenimiento";
+                            if ("Activo".equals(m.getEstado())) {
+                                estadoColorClass = "status-badge-success";
+                                estadoText = "Activo";
+                            } else if ("Inactivo".equals(m.getEstado())) {
+                                estadoColorClass = "status-badge-danger";
+                                estadoText = "Inactivo";
+                            }
+                            
+                            // Asumiendo que Maquina tiene los métodos: getNombre(), getUbicacion(), getModelo(), getConductor(), getEficiencia(), getCombustible(), getKilometraje()
+                            // Nota: En tu JSP original usas getAntiguedad() como un porcentaje. Aquí usaré un valor fijo de ejemplo (97.8) para la Eficiencia.
+                            double eficiencia = 97.8; // Valor de ejemplo, ajusta a tu modelo
+                            int combustible = 78; // Valor de ejemplo, ajusta a tu modelo
+                            String ubicacion = "Depot Central - Taller A"; // Valor de ejemplo, ajusta a tu modelo
                 %>
                 <div class="col">
-                    <div class="card shadow-sm">
-                        <img src="<%= img %>" class="card-img-top" alt="<%= m.getNombre() %>">
-                        <div class="card-body text-center">
-                            <h5 class="card-title"><%= m.getNombre() %></h5>
-                            <p>
-                                <span class="badge <%= "Activo".equals(m.getEstado()) ? "bg-success" :
-                                                       "Mantenimiento".equals(m.getEstado()) ? "bg-warning" : "bg-secondary" %>">
-                                    <%= m.getEstado() %>
-                                </span>
-                            </p>
-                            <a href="#" class="btn btn-primary btn-sm">Detalles</a>
-                            <div class="mt-3">
-                                <%
-                                    int anios = m.getAntiguedad();
-                                    int porcentaje = (int) ((anios * 100.0) / 25);
-                                %>
-                                <small class="text-muted">Antigüedad: <%= anios %> años (<%= porcentaje %>%)</small>
-                                <div class="progress">
-                                    <div class="progress-bar" role="progressbar"
-                                         style="width: <%= porcentaje %>%;" 
-                                         aria-valuenow="<%= porcentaje %>" aria-valuemin="0" aria-valuemax="100">
-                                    </div>
+                    <div class="custom-machine-card shadow-sm p-3">
+                        
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="vehicle-icon-wrapper">
+                                    <i class="bi bi-truck vehicle-icon-placeholder"></i>
+                                </div>
+                                <div>
+                                    <h5 class="machine-id mb-0"><%= m.getNombre() %></h5>
+                                    <small class="text-muted"><%= m.getModelo() %> (Distribución B)</small>
                                 </div>
                             </div>
+                            <span class="status-badge <%= estadoColorClass %>"><%= m.getEstado() %></span>
                         </div>
+
+                        <div class="mb-3 machine-detail-group">
+                            <p class="mb-1"><i class="bi bi-geo-alt-fill me-2"></i><%= ubicacion %></p>
+                            <p class="mb-0"><i class="bi bi-person-fill me-2"></i>Conductor: <strong><%= m.getConductor() %></strong></p>
+                        </div>
+                        
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <i class="bi bi-graph-up metric-icon-green"></i>
+                                <h4 class="metric-value text-success mb-0"><%= String.format("%.1f", eficiencia) %>%</h4>
+                                <small class="metric-label text-muted">Eficiencia</small>
+                            </div>
+
+                            <div class="metric-item">
+                                <i class="bi bi-fuel-pump-fill metric-icon-blue"></i>
+                                <h4 class="metric-value text-info mb-0"><%= combustible %></h4>
+                                <small class="metric-label text-muted">Combustible</small>
+                            </div>
+
+                            <div class="metric-item">
+                                <i class="bi bi-clock metric-icon-secondary"></i>
+                                <h4 class="metric-value text-secondary mb-0"><%= String.format("%,d", m.getKilometraje()) %> km</h4>
+                                <small class="metric-label text-muted">km</small>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 text-center">
+                            <a href="#" class="btn btn-sm btn-outline-primary w-100">Ver Detalles</a>
+                        </div>
+                        
                     </div>
                 </div>
                 <%
@@ -150,10 +192,10 @@
                     <p class="text-muted">No hay máquinas registradas aún.</p>
                 </div>
                 <% } %>
-            </div>
         </div>
     </div>
-
+        
+        
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

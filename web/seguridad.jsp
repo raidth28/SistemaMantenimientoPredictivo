@@ -32,5 +32,5 @@
     if ("empleado".equals(rol) && accedeAdmin) {
         response.sendRedirect(contextPath + "/vistasEmpleado/empleadoMaquinas.jsp");
         return;
-    }a
+    }
 %>
